@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request
+from flask import Flask,render_template,request,jsonify
 from flask_json import FlaskJSON, JsonError, json_response, as_json
 import jwt
 
@@ -38,7 +38,7 @@ def buy():
 
 @app.route('/hello') #endpoint
 def hello():
-    return render_template('hello.html',img_url=IMGS_URL[CUR_ENV] ) 
+    return render_template('hello.html',img_url=IMGS_URL[CUR_ENV] )
 
 @app.route('/back',  methods=['GET']) #endpoint
 def back():
@@ -59,8 +59,81 @@ def auth():
         print(request.form)
         return json_response(data=request.form)
 
+@app.route('/login', methods=['POST']) #endpoint
+def login():
+    user_name = request.form['username']
+    cur = global_db_con.cursor()
+    cur.execute("select username from users where user_id = 1;")
+    correct_username = cur.fetchone()[0]
+    salted = bcrypt.hashpw( bytes(request.form['password'], 'utf-8' ), bcrypt.gensalt(10))
+    print(salted)
+    cur.execute("select password from users where user_id = 1;")
+    correct_password = cur.fetchone()[0]
+    correct_password = bytes(correct_password, 'utf-8')
+    print("entered username:")
+    print(user_name)
+    print("correct username:")
+    print(correct_username)
+    print("correct password:")
+    print(correct_password)
+    if( bcrypt.checkpw( bytes(request.form['password'], 'utf-8') , correct_password)): #compare password with correct password
+      print("correct username and password")
+      #encoding user name and passing a jwt token
+      token = jwt.encode({"username": correct_username}, JWT_SECRET, algorithm="HS256")
+      return json_response(jwt_token = token) #setting token as jwt_token and passing
+    else:
+      return jsonify(status = "Bad", data = "Invalid Username or Password")
 
+@app.route('/bookstore', methods=['GET']) #endpoint
+def bookstore():
+    cur = global_db_con.cursor()
+    cur.execute(" select book_name from books;")
+    book_grab = cur.fetchall()
+    print(book_grab)
+    cur.execute("select book_price from books;")
+    price_grab = cur.fetchall()
+    passtoken = request.headers.get('Authorization') #get access to header authorization and jwt token from html file
+    if decodeToken(passtoken) == True: #if decoded username is true using decode function
+    	print("User is A Valid User Insert Books")
+    	print(passtoken)
+    	return json_response(jwtToken_key = passtoken,book_library = book_grab,price_library = price_grab) #return jwttoken key decoded which is the authenticated user and pass the books
+    else:
 
+   	 return json_response(status = "Error")
+
+def decodeToken(jwtToken_key):
+    print("Passing Through Decode Function")
+    jwtTokenkey_decode = jwt.decode(jwtToken_key,JWT_SECRET, algorithms="HS256") #decode encoded jwtToken_key
+    print(jwtTokenkey_decode.get('username')) 
+    strUser = jwtTokenkey_decode.get('username') #store decoded username
+    cur = global_db_con.cursor()
+    cur.execute("select username from users where user_id =1;")
+    valid_user = cur.fetchone()[0]
+    print(valid_user)
+    if valid_user == strUser: #check if decoded username is equal to valid username
+   	 print("JWT Token Success")
+   	 return True
+    else:
+    	return False
+
+@app.route('/buybooks',methods = ['POST']) #endpoint
+def buybooks():
+    print("Requestform['books'] value:")
+    print(request.form['books'])
+    book_selection = request.form['books'] #storing selected book from request form
+    print("Selected Book:")
+    print(book_selection)
+    print("Requestform['purchase_date'] value:") 
+    print(request.form['purchase_date'])
+    buy_time =request.form['purchase_date']  #storing purchase time from request form
+    print("buy time:")
+    print(buy_time)
+    cur = global_db_con.cursor()
+    cur.execute("update purchases set book_name = '"+book_selection+"' where username_id = 1;")
+    cur.execute("update purchases set date_time = '"+buy_time+"' where username_id = 1;") 
+    return json_response(status = "Purchase Succesful")
+    return json_response(status = "Purchase Succesful")
+   # update purchases set book_name = 'Hunger Games' where username_id = 1;
 #Assigment 2
 @app.route('/ss1') #endpoint
 def ss1():
@@ -99,15 +172,6 @@ def hellodb():
 
 
 app.run(host='0.0.0.0', port=80)
-
-
-
-
-
-
-
-
-
 
 
 

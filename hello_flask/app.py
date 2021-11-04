@@ -129,8 +129,9 @@ def buybooks():
     print("buy time:")
     print(buy_time)
     cur = global_db_con.cursor()
-    cur.execute("update purchases set book_name = '"+book_selection+"' where username_id = 1;")
+    cur.execute("UPDATE purchases SET book_name = '"+book_selection+"' WHERE username_id = 1;")
     cur.execute("update purchases set date_time = '"+buy_time+"' where username_id = 1;") 
+    global_db_con.commit()
     return json_response(status = "Purchase Succesful")
 
 #Assigment 2

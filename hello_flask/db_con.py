@@ -1,5 +1,5 @@
 import psycopg2
-
+import bcrypt
 
 def get_db():
     return psycopg2.connect(host="localhost", dbname= "books"  , user="rolename", password="test_password")
@@ -19,9 +19,12 @@ if __name__ == "__main__":
     for r in cur.fetchall():
         print(r)
 
-    cur.execute("create table music ( song_name varchar(255), rating int);")
-    db.commit()
+    #cur.execute("create table music ( song_name varchar(255), rating int);")
+    #db.commit()
 
+    password_to_salt = "congratulations"
+    salted = bcrypt.hashpw( bytes(password_to_salt,  'utf-8' ) , bcrypt.gensalt(10))
+    print(password_to_salt)
+    print(salted)
 
-
-
+    

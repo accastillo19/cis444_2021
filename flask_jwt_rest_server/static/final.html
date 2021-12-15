@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
+    </head>
+
+    <body style="background-image:url('/static/eathpic.png')">
+
+		 <h1 style="color:red; font-size:100px;text-align:center;">GEO Location API</h1>
+                 <p style="color:red; font-size:50px;text-align:center;">Find Your exact coordinates using this web application.</p>
+                 
+			<p style="color:red;font-size:25px;text-align:center;">Enter Your Address</p>
+
+	 <div style="text-align:center;" id="coordinates">
+	    	<form >
+  			<label style="text-alignt:center" for="address"></label><br>
+  				<input type="text" id="address" name="address" value=""><br>
+  			<input style="text-alignt:center" type="submit" value="Enter" onclick="return send_form();">
+		</form>
+	    </div>
+			<script>
+
+			function send_form(){
+			$.post("/open_api/enter_address", { "address":$('#address').val()},
+                       		function(data, textStatus) {
+					//this gets called when browser receives response from server
+					console.log(data.token);
+					//Set global JWT
+					jwt = data.token;
+					//make secure call with the jwt
+					getLocation();
+
+				}, "json").fail( function(response) {
+					//this gets called if the server throws an error
+					console.log("error");
+					console.log(response);
+
+				});
+			return false;
+		}
+
+
+			var x = document.getElementById("demo");
+
+			function getLocation() {
+
+			secure_get_with_token("/secure_api/find_address", {$('#address').val)} , function(data){
+					console.log(data);
+				
+			  if (navigator.geolocation) {
+    				navigator.geolocation.address(showPosition);
+				  } else { 
+   					 x.innerHTML = "Geolocation is not supported by this browser.";
+  					 }
+			}
+		      }
+
+			function showPosition(address) {
+  			   x.innerHTML = "Latitude: " + position.coords.latitude + 
+  			   "<br>Longitude: " + position.coords.longitude;
+			}
+			 
+<script>
+    </body>
+</html>
+
+
+
